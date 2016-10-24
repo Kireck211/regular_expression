@@ -53,8 +53,6 @@ def shunting_yard(regular_expression, deque, stack):
 	while len(stack) != 0:
 		deque.append(stack.pop())
 
-
-
 class Token(object):
 	"""Creates a token object"""
 	def __init__(self, token):
