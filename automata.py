@@ -1,73 +1,42 @@
 from collections import deque
 from sys import argv
+from automata_lib import *
 
-operator_priority = [["(", ")"],["*"], ["+"], [".", ","]];
 deque = deque([])
-stack = []
+graph = []
 script, file_name = argv
 
-def return_priority(operator):
-	for index, operators in enumerate(operator_priority):
-		if operator in operators:
-			return index
-	return -1
+def m1(regular_expression):
+	regular_expression = add_concats(regular_expression)
+	shunting_yard(regular_expression, deque)
+	postfix = ""
+	for token in deque:
+		postfix += token.value
+	return postfix 
 
-def add_concats(regular_expression):
-	new_regular_expression = []
-	for i in range(0, len(regular_expression) - 1):
-		new_regular_expression.append(regular_expression[i])
-		if (regular_expression[i].isalpha() and regular_expression[i+1].isalpha()):
-			new_regular_expression.append(".")
-		elif (regular_expression[i].isalpha() and regular_expression[i+1] == "("):
-			new_regular_expression.append(".")
-		elif (return_priority(regular_expression[i]) > 0 and regular_expression[i+1].isalpha()):
-			new_regular_expression.append(".")
-		elif (return_priority(regular_expression[i]) == 0 and regular_expression[i+1].isalpha()):
-			new_regular_expression.append(".")
-		elif ((return_priority(regular_expression[i]) < 0 and not regular_expression[i].isalpha()) and return_priority(regular_expression[i]) < 0):
-			new_regular_expression.append(".")
-
-	new_regular_expression.append(regular_expression[len(regular_expression)-1])
-	return "".join(new_regular_expression)
-
-def shunting_yard(regular_expression, deque, stack):
-	for token in regular_expression:
-		token = Token(token)
-		if token.priority == -1:
-			deque.append(token)
-		elif token.priority == 1:
-			if token.value == "(":
-				stack.append(token)
-			else:
-				last = stack.pop()
-				while(last.value != "("):
-					deque.append(last)
-					last = stack.pop()
-		else:
-			while (len(stack) != 0):
-				if (token.priority <= stack[len(stack)-1].priority):
-					deque.append(stack.pop())
-				else:
-					break
+def m2(postfix):
+	initialize_graph(postfix)
+	print(graph)
+	"""
+	graph = create_graph(postfix)
+	stack = []
+	inital_node = Node(len(graph) - 1)
+	initial_node.initial = True
+	graph.append(initial_node)
+	final_node = Node(len(graph) - 1)
+	final_node.finalll = True
+	for token in postfix:
+		priority = return_priority(token)
+		if (priority < 0):
 			stack.append(token)
-	while len(stack) != 0:
-		deque.append(stack.pop())
+		else:
+			add_node(token,)"""
 
-class Token(object):
-	"""Creates a token object"""
-	def __init__(self, token):
-		self.value = token
-		self.priority = return_priority(token)
+def main():
+	input_file = open(file_name)
+	regular_expression = input_file.readline()
+	print("M1: " + m1(regular_expression), end="")
+	#m2(m1(regular_expression))
 
-input_file = open(file_name)
-regular_expression = input_file.readline()
-regular_expression = add_concats(regular_expression)
-print(regular_expression)
 
-shunting_yard(regular_expression, deque, stack)
-print("Printing stack:")
-for element in stack:
-	print(element.value)
-print("Printing deque:")
-for element in deque:
-	print(element.value, end=" ")
+main()
