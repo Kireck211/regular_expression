@@ -1,3 +1,5 @@
+from collections import deque
+
 # ---------------- Classes ----------------
 
 """ Class used to convert a character
@@ -96,16 +98,23 @@ def add_concats(regular_expression):
 	new_regular_expression.append(regular_expression[len(regular_expression)-1])
 	return "".join(new_regular_expression)
 
+def token_to_string(deque):
+	rpn = ""
+	for item in deque:
+		rpn += item.value
+	return rpn
+
 """ Functions that add to the deque a rpn
 	(reversed polish notation) of a 
 	regular expression"""
-def shunting_yard(regular_expression, deque):
+def shunting_yard(regular_expression):
+	deque_sy = deque([])
 	stack = []
 	for token in regular_expression:
 		token = Token(token)
 		if (token.priority < 0):
 			print("Entra con letra o con caracter especial")
-			deque.append(token)
+			deque_sy.append(token)
 		elif (token.priority == 0):
 			if (token.value == '('):
 				print("Entra con paréntesis (")
@@ -114,18 +123,19 @@ def shunting_yard(regular_expression, deque):
 				print("Entra con paréntesis)")
 				lookToken = stack.pop();
 				while(lookToken.value != '('):
-					deque.append(lookToken)
+					deque_sy.append(lookToken)
 					print("Value token before pop: " + lookToken.value + " and size of stack: " + str(len(stack)))
 					lookToken = stack.pop()
 		else:
 			print("Entra con " + token.value)
-			print("Valor de comparacion: " + (stack[len(stack)-1].value))
+			print("Valor de comparacion: " + (stack[len(stack)-1].value) if len(stack) else 'pila vacia')
 			while(len(stack) and stack[len(stack)-1].priority <= token.priority and stack[len(stack) - 1].value != '('): 
 				print("Top value of stack: " + stack[len(stack)-1].value +" and taken token: " + token.value)
-				deque.append(stack.pop())
+				deque_sy.append(stack.pop())
 			stack.append(token)
 	while(len(stack)):
-		deque.append(stack.pop())
+		deque_sy.append(stack.pop())
+	return token_to_string(deque_sy)
 
 """ Function that returns true if an array of chars
 	is a regular expression or false if it is 

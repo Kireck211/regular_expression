@@ -1,14 +1,14 @@
 from collections import deque
-from sys import argv
+from sys import path, argv
+sys.path.insert(0, '/path/to/regular_expression/lib')
 from automata_lib import *
 
-deque = deque([])
 graph = []
 script, file_name = argv
 
 def m1(regular_expression):
 	regular_expression = add_concats(regular_expression)
-	shunting_yard(regular_expression, deque)
+	shunting_yard(regular_expression)
 	postfix = ""
 	for token in deque:
 		postfix += token.value
