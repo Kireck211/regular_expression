@@ -1,4 +1,3 @@
-from collections import deque
 from sys import argv
 from automata_lib import *
 
@@ -10,8 +9,9 @@ def m1(regular_expression):
 
 def m2(postfix):
 	initialize_graph(postfix)
-	print(append_not_atom(graph[0], postfix))
-	print(append_not_atom(graph[0], postfix))
+	print_graph()
+	#print(append_not_atom(graph[0], postfix))
+	#print(append_not_atom(graph[0], postfix))
 
 def main():
 	input_file = open(file_name)
