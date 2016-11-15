@@ -113,24 +113,24 @@ def shunting_yard(regular_expression):
 	for token in regular_expression:
 		token = Token(token)
 		if (token.priority < 0):
-			print("Entra con letra o con caracter especial")
+			#print("Entra con letra o con caracter especial")
 			deque_sy.append(token)
 		elif (token.priority == 0):
 			if (token.value == '('):
-				print("Entra con paréntesis (")
+				#print("Entra con paréntesis (")
 				stack.append(token)
 			else:
-				print("Entra con paréntesis)")
+				#print("Entra con paréntesis)")
 				lookToken = stack.pop();
 				while(lookToken.value != '('):
 					deque_sy.append(lookToken)
-					print("Value token before pop: " + lookToken.value + " and size of stack: " + str(len(stack)))
+					#print("Value token before pop: " + lookToken.value + " and size of stack: " + str(len(stack)))
 					lookToken = stack.pop()
 		else:
-			print("Entra con " + token.value)
-			print("Valor de comparacion: " + (stack[len(stack)-1].value) if len(stack) else 'pila vacia')
+			#print("Entra con " + token.value)
+			#print("Valor de comparacion: " + (stack[len(stack)-1].value) if len(stack) else 'pila vacia')
 			while(len(stack) and stack[len(stack)-1].priority <= token.priority and stack[len(stack) - 1].value != '('): 
-				print("Top value of stack: " + stack[len(stack)-1].value +" and taken token: " + token.value)
+				#print("Top value of stack: " + stack[len(stack)-1].value +" and taken token: " + token.value)
 				deque_sy.append(stack.pop())
 			stack.append(token)
 	while(len(stack)):
