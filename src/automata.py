@@ -12,20 +12,6 @@ def m2(postfix):
 	initialize_graph(postfix)
 	print(append_not_atom(graph[0], postfix))
 	print(append_not_atom(graph[0], postfix))
-	"""
-	graph = create_graph(postfix)
-	stack = []
-	inital_node = Node(len(graph) - 1)
-	initial_node.initial = True
-	graph.append(initial_node)
-	final_node = Node(len(graph) - 1)
-	final_node.finalll = True
-	for token in postfix:
-		priority = return_priority(token)
-		if (priority < 0):
-			stack.append(token)
-		else:
-			add_node(token,)"""
 
 def main():
 	input_file = open(file_name)
