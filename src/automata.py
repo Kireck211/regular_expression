@@ -1,22 +1,17 @@
 from collections import deque
-from sys import path, argv
-sys.path.insert(0, '/path/to/regular_expression/lib')
+from sys import argv
 from automata_lib import *
 
-graph = []
 script, file_name = argv
 
 def m1(regular_expression):
 	regular_expression = add_concats(regular_expression)
-	shunting_yard(regular_expression)
-	postfix = ""
-	for token in deque:
-		postfix += token.value
-	return postfix 
+	return shunting_yard(regular_expression) 
 
 def m2(postfix):
 	initialize_graph(postfix)
-	print(graph)
+	print(append_not_atom(graph[0], postfix))
+	print(append_not_atom(graph[0], postfix))
 	"""
 	graph = create_graph(postfix)
 	stack = []
@@ -35,8 +30,9 @@ def m2(postfix):
 def main():
 	input_file = open(file_name)
 	regular_expression = input_file.readline()
-	print("M1: " + m1(regular_expression), end="")
-	#m2(m1(regular_expression))
+	module1 = m1(regular_expression)
+	print("Module 1 (RPN): " +module1)
+	m2(module1)
 
 
 main()

@@ -19,7 +19,8 @@ class Node(object):
 	"""Creates a node object"""
 	def __init__(self):
 		global graph
-		self.index = len(graph)
+		index = len(graph)
+		self.index = index
 		self.transitions = {}
 		self.initial = False
 		self.final = False
@@ -29,13 +30,20 @@ class Node(object):
 class Errors(object):
 	"""Creates an object with all the posibles bugs"""
 	def __init__(self):
-		self.errors = ['A postfix has a \"(\" or \")\"', 'Postfix was not well build, trying to pop of empty stack']
+		self.errors = [
+			'A postfix has a \"(\" or \")\"', 
+			'Postfix was not well build, trying to pop of empty stack', 
+			'Cannot remove key_transition, because transition is not in the left_node'
+		]
 
 	def error(index):
 		print(self.errors[index])
 		exit(index)
 
 # ---------------- Classes ----------------
+
+
+
 
 # ---------------- Global variables  ----------------
 
@@ -48,7 +56,13 @@ graph = []
 # Global errors object
 logical_errors = Errors()
 
+# Global queue of not atoms
+queue = {}
+
 # ---------------- Global variables  ----------------
+
+
+
 
 # ---------------- Functions ----------------
 
@@ -98,6 +112,7 @@ def add_concats(regular_expression):
 	new_regular_expression.append(regular_expression[len(regular_expression)-1])
 	return "".join(new_regular_expression)
 
+""" Function that returns a string from a deque"""
 def token_to_string(deque):
 	rpn = ""
 	for item in deque:
@@ -137,47 +152,112 @@ def shunting_yard(regular_expression):
 		deque_sy.append(stack.pop())
 	return token_to_string(deque_sy)
 
-""" Function that returns true if an array of chars
-	is a regular expression or false if it is 
-	a valid node creation rule"""
-def is_regular_expression(characters):
+""" Function that returns true 
+	if the characters is an 
+	atom, false otherwise"""
+def is_atom(characters):
+	if (len(characters) == 1 and return_priority(characters) < 0):
+		return True
 	return False
 
-""" Function that creates new nodes between left_node and
-	right_node with their transitions according to the
-	characters"""
-def add_node(token, stack, left_node, right_node):
-	# if priority == 1 means it it * or +
-	if (is_regular_expression(characters)):
-		regex = characters.join('')
-		left_node.transitions[regex] = []
-		left_node.transitions[regex].append(right_node)
 
-	if (priority == 1):
-		if (characters[0] == '*'):
-			inter_node = Node(len(graph) - 1)
-			left_node.transitions['#'] = inter_node
-			inter_node.transitions['#'] = right_node
-			inter_node.transitions[characters[1]] = inter_node
-		elif (characters[0] == '+'):
-			inter_node = Node(len(graph) - 1)
-			second_inter_node = Node(len(graph) - 1)
-			left_node.transitions[characters[1]].append(inter_node)
-			inter_node.transitions['#'] = []
-			inter_node.transitions['#'].append(right_node)
-			inter_node.transitions[characters[1]] = []
-			inter_node.transitions[characters[1]].append(inter_node)
-	elif (priority == 2):
-		return 0
+""" Function that prints all the graph and its transitions"""
+def print_graph():
+	for node in graph:
+		if (len(node.transitions)):
+			print("The state {} has the following transitions:".format(node.index))
+			for key in node.transitions:
+				for pointed_node in node.transitions[key]:
+					print("\"{}\" : {}".format(key, pointed_node.index))
+		else:
+			print("The state {} has no transitions".format(node.index))
+		print("")
 
-	else: 
-		logical_errors.error(1)
+""" Function that prints the lenght of the queue,
+	keys and value in that key"""
+def print_queue():
+	print("The queue has {} elements".format(len(queue)))
+	for index in queue:
+		print("The elements at {} has {}".format(index, queue[index]))
 
+""" Function that appends to the general queue transitions to check"""
+def append_not_atom(node, key_transition):
+	# The key_transition has possibilities to append
+	if (not is_atom(key_transition)):
+		#print("Entered because is not an atom")
+
+		# The key don't exist in the queue
+		if (not node.index in queue):
+			#print("Entered because the queue hasn't this {} as key".format(node.index))
+			queue[node.index] = []
+
+		# The key_transition exists in the queue with the node.index
+		if (key_transition in queue[node.index]):
+			#print("Entered because the transition: {} already exists in the queue with the key: {}".format(key_transition, node.index))
+			# The key_transitions isn't appended
+			return False
+
+		# The key_transition is appended
+		queue[node.index].append(key_transition)
+		return True
+	
+	# The key_transition not appended, return False
+	return False
+
+
+""" Function that adds a transition from the left_node 
+	to the right_node with the transition 
+	of key_transition"""
+def add_transition(left_node, right_node, key_transition):
+	append_not_atom(left_node, key_transition)
+	if (not key_transition in left_node.transitions):
+		left_node.transitions[key_transition] = []
+	left_node.transitions[key_transition].append(right_node)
+
+
+""" Function that removes transition with the value 
+	of key_transition from left_node 
+	to right_node"""
+def remove_transition(left_node, right_node, key_transition):
+	if (not key_transition in left_node.transitions):
+		logical_errors(3)
+	left_node.transitions[key_transition].remove(right_node)
+
+
+""" Funciton that add new nodes with concat operation """
+def concat_operation(left_node, right_node, postfix):
+	node = Node()
+	new_postfix = postfix.replace(".","", 1)
+	add_transition(node, right_node, new_postfix[1:])
+	add_transition(left_node, node, postfix[0])
+	remove_transition(left_node, right_node, postfix)
+	print_graph()
+
+""" Function that add new nodes with the union operation """
+def union_operation():
+	return True
+
+""" Function that add new nodes witht the star repetition operation"""
+def star_repetition():
+	return True
+
+""" Function that add new nodes witht the positive repetition operation"""
+def positive_repetition():
+	return True
+
+""" Function that creates a node between 
+	nodes with a not atom transition"""
+def add_node():
+	while(len(queue)):
+		break
+
+""" Function that adds the first node and the last 
+	with the postfix transition"""
 def initialize_graph(postfix):
 	initial = Node()
 	final = Node()
 	initial.initial = True
-	initial.transitions[postfix] = []
-	initial.transitions[postfix].append(final)
+	add_transition(initial,final,postfix)
+	append_not_atom(initial, postfix)
 
 # ---------------- Functions ----------------
