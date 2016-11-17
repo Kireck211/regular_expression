@@ -18,7 +18,7 @@ def main():
 	regular_expression = input_file.readline()
 	module1 = m1(regular_expression)
 	print("Module 1 (RPN): " +module1)
-	m2(module1)
+	#m2(module1)
 
 
 main()
