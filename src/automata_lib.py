@@ -25,6 +25,7 @@ class Node(object):
 		self.transitions = {}
 		self.initial = False
 		self.final = False
+		self.visited = False
 
 """ Class used to show logical errors and exit the program """
 class Errors(object):
@@ -34,7 +35,8 @@ class Errors(object):
 			'A postfix has a \"(\" or \")\"', 
 			'Postfix was not well build, trying to pop of empty stack', 
 			'Cannot remove key_transition, because transition is not in the left_node',
-			'This final node has transitions'
+			'This final node has transitions',
+			'The parent cannot be the same as the child in the bfs search_last_node mode'
 		]
 
 	def print_error(self, index):
@@ -168,19 +170,11 @@ def is_atom(characters):
 		return True
 	return False
 
-def print_graph(node):
-	print("The node {} has the next transitions: ".format(node.index))
-	for key in node.transitions:
-		print(key+': ', end="")
-		for value in node.transitions[key]:
-			print(str(value.index), end=" ")
-	print("")
-
 """ Function that prints all the graph and its transitions"""
 def print_stack():
 	print("The length of the stack: " + str(len(stack)))
 	for graph in stack:
-		print_graph(graph.initial)
+		bfs_iterative(stack[0].initial, 'print', None, None)
 
 
 """ Function that adds a transition from the left_node 
@@ -199,6 +193,59 @@ def remove_transition(left_node, right_node, key_transition):
 		logical_errors.print_error(3)
 	left_node.transitions[key_transition].remove(right_node)
 
+def exchange_nodes(src_node, key_transition, goal_node, new_goal_node):
+	src_node.transitions[key_transition].remove(goal_node)
+	add_transition(src_node, new_goal_node, key_transition)
+
+def bfs_iterative(node, mode, goal_node, new_goal_node):
+	to_visit = deque([])
+	to_visit.append(node)
+	if(mode == 'print'):
+		while(len(to_visit)):
+			node_to_visit = to_visit.popleft()
+			print("The node {} hast the next transitions:".format(node_to_visit.index))
+			for key in node_to_visit.transitions:
+				print("'{}': ".format(key), end="")
+				for next_node in node_to_visit.transitions[key]:
+					print("{}".format(next_node.index), end=" ")
+					if(not next_node.visited and not next_node in to_visit):
+						to_visit.append(next_node)
+			node_to_visit.visited = True
+			print("")
+		bfs_iterative(node, 'clear_visited', None, None)
+
+	elif(mode == 'clear_visited'):
+		while(len(to_visit)):
+			node_to_visit = to_visit.popleft()
+			for key in node_to_visit.transitions:
+				for next_node in node_to_visit.transitions[key]:
+					if(next_node.visited):
+						to_visit.append(next_node)
+					node_to_visit.visited = False
+
+	elif(mode == 'search_last_node'):
+		while(len(to_visit)):
+			node_to_visit = to_visit.popleft()
+			for key in node_to_visit.transitions:
+				for next_node in node_to_visit.transitions[key]:
+					if(not next_node.visited):
+						if(next_node == goal_node):
+							#print("From {} with {} key value the {} is going to be exchanged by {}".format(node_to_visit.index,key,next_node.index, new_goal_node.index))
+							exchange_nodes(node_to_visit, key, next_node, new_goal_node)
+						to_visit.append(next_node)
+					node_to_visit.visited = True
+		del goal_node
+
+
+def copy_keys(from_node, to_node):
+	for key in from_node.transitions:
+		if(key in to_node.transitions):
+			for value in from_node.transitions[key]:
+				if (not value in to_node.transitions[key]):
+					to_node.transitions[key].append(value)
+		else:
+			to_node.transitions[key] = list(from_node.transitions[key])
+
 """ Funciton that add concats left node to right node """
 def concat_operation(left, right):
 	if(len(left.transitions) and (not '#' in left.transitions) and len(left.transitions) != 1):
@@ -208,25 +255,32 @@ def concat_operation(left, right):
 
 
 """ Function that add new nodes with the union operation """
-def union_operation():
-	return True
+def union_operation(initial, last, new_last):
+	if(len(last.transitions) and (not '#' in left.transitions) and len(left.transitions) != 1):
+		logical_errors.print_error(4)
+	bfs_iterative(initial, 'search_last_node', final, new_last)	
 
 """ Function that add new nodes witht the star repetition operation"""
-def star_repetition(first, last):
-	if(len(last.transitions)):
+def star_repetition(initial, last):
+	if(len(last.transitions) and (not '#' in left.transitions) and len(left.transitions) != 1):
 		logical_errors.print_error(4)
-	new_first = Node()
+	new_initial = Node()
 	new_last = Node()
-	add_transition(new_first, first, '#')
+	add_transition(new_initial, initial, '#')
 	add_transition(last, new_last, '#')
-	add_transition(new_first, new_last, '#')
-	add_transition(new_last, first, '#')
-	return new_first, new_last
+	add_transition(new_initial, new_last, '#')
+	add_transition(new_last, initial, '#')
+	return new_initial, new_last
 
 
 """ Function that add new nodes witht the positive repetition operation"""
-def positive_repetition():
-	return True
+def positive_repetition(initial, last):
+	if(len(last.transitions) and (not '#' in left.transitions) and len(left.transitions) != 1):
+		logical_errors.print_error(4)
+	new_last = Node()
+	add_transition(last, new_last, '#')
+	add_transition(new_last, initial, '#')
+	return new_last
 		
 
 """ Function that adds the first node and the last 
@@ -239,14 +293,27 @@ def afn_epsilon(postfix):
 			add_transition(first, last, token)
 			stack.append(GraphStack(first, last))
 		elif(token == '.'):
-			second = stack.pop()
-			first = stack.pop()
-			concat_operation(first.last, second.initial)
-			stack.append(GraphStack(first.initial, second.last))
+			second_graph = stack.pop()
+			first_graph = stack.pop()
+			concat_operation(first_graph.last, second_graph.initial)
+			stack.append(GraphStack(first_graph.initial, second_graph.last))
 		elif(token == '*'):
 			graph = stack.pop()
 			first, last = star_repetition(graph.initial, graph.last)
 			stack.append(GraphStack(first, last))
+		elif(token == '+'):
+			graph = stack.pop()
+			last = positive_repetition(graph.initial, graph.last)
+			stack.append(GraphStack(graph.initial, last))
+		elif(token == ','):
+			second_graph = stack.pop()
+			first_graph = stack.pop()
+			bfs_iterative(second_graph.initial, 'search_last_node', second_graph.last, first_graph.last)
+			copy_keys(second_graph.initial, first_graph.initial)
+			del second_graph.initial
+			del second_graph.last
+			stack.append(GraphStack(first_graph.initial, first_graph.last))
+
 
 
 # ---------------- Functions ----------------
