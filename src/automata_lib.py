@@ -357,10 +357,6 @@ def afn_epsilon(postfix):
 			del second_graph.initial, second_graph.last
 			stack.append(GraphStack(first_graph.initial, first_graph.last))
 	bfs_iterative(stack[0].initial, 'change_indexes', None, None)
-	print_stack()
-	del stack[:]
-	global count
-	count = 0
 
 
 
