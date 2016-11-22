@@ -30,8 +30,8 @@ class Node(object):
 
 	def increment_index_count(self):
 		global count
-		count += 1
 		self.index = count
+		count += 1
 
 """ Class used to show logical errors and exit the program """
 class Errors(object):
@@ -178,7 +178,7 @@ def is_atom(characters):
 
 """ Function that prints all the graph and its transitions"""
 def print_stack():
-	print("The length of the stack: " + str(len(stack)))
+	#print("The length of the stack: " + str(len(stack)))
 	for graph in stack:
 		bfs_iterative(stack[0].initial, 'print', None, None)
 
@@ -210,7 +210,7 @@ def bfs_iterative(node, mode, goal_node, new_goal_node):
 		while(len(to_visit)):
 			node_to_visit = to_visit.popleft()
 			node_to_visit.visited = True			
-			print("The node {} hast the next transitions:".format(node_to_visit.index))
+			print("The node {} has the next transitions:".format(node_to_visit.index))
 			for key in node_to_visit.transitions:
 				print("'{}': ".format(key), end="")
 				for next_node in node_to_visit.transitions[key]:
@@ -241,20 +241,45 @@ def bfs_iterative(node, mode, goal_node, new_goal_node):
 							exchange_nodes(node_to_visit, key, next_node, new_goal_node)
 						to_visit.append(next_node)
 		del goal_node
+		bfs_iterative(node, 'clear_visited', None, None)
 
-	elif(mode == 'copy_graph'):
+	elif(mode == 'change_indexes'):
+		consecutive = 0
 		while(len(to_visit)):
 			node_to_visit = to_visit.popleft()
-			node_to_visit.visited = True
-			node_to_visit = copy.copy(node_to_visit)
-			node_to_visit.increment_index_count()
+			if (consecutive != node_to_visit.index):
+				node_to_visit.index = consecutive
+			consecutive += 1
 			node_to_visit.visited = True
 			for key in node_to_visit.transitions:
 				for next_node in node_to_visit.transitions[key]:
 					if(not next_node.visited and not next_node in to_visit):
 						to_visit.append(next_node)
-		
+		bfs_iterative(node, 'clear_visited', None, None)
 
+def copy_node(node):
+	node_copied = Node()
+	for key in node.transitions:
+		node_copied.transitions[key] = copy.copy(node.transitions[key])
+	node_copied.increment_index_count()
+	return node_copied
+		
+def copy_graph(initial, last):
+	copy_initial = copy_node(initial)
+	copies_factory = {initial.index: copy_initial}
+	to_visit = deque([copy_initial])
+	while(len(to_visit)):
+		node = to_visit.popleft()
+		node.visited = True
+		for key in node.transitions:
+			for next_node in node.transitions[key]:
+				if (not next_node.index in copies_factory):
+					copies_factory[next_node.index] = copy_node(next_node)
+				exchange_nodes(node, key, next_node, copies_factory[next_node.index])
+				if(not copies_factory[next_node.index].visited and not copies_factory[next_node.index] in to_visit):
+					to_visit.append(copies_factory[next_node.index])
+	bfs_iterative(copies_factory[initial.index], 'clear_visited', None, None)
+	return copies_factory[initial.index], copies_factory[last.index]
 
 def copy_keys(from_node, to_node):
 	for key in from_node.transitions:
@@ -295,10 +320,11 @@ def star_repetition(initial, last):
 def positive_repetition(initial, last):
 	if(len(last.transitions) and (not '#' in left.transitions) and len(left.transitions) != 1):
 		logical_errors.print_error(4)
-	bfs_iterative(initial, 'copy_graph', None, None)
-	new_star_initial, new_star_last = star_repetition(initial, last)
+	#bfs_iterative(initial, 'copy_graph', None, None)
+	new_star_initial, new_star_last = copy_graph(initial, last)
+	new_star_initial, new_star_last = star_repetition(new_star_initial, new_star_last)
 	concat_operation(last, new_star_initial)
-	return new_star_initial, new_star_last
+	return initial, new_star_last
 
 """ Function that adds the first node and the last 
 	with the postfix transition"""
@@ -316,7 +342,7 @@ def afn_epsilon(postfix):
 			stack.append(GraphStack(first_graph.initial, second_graph.last))
 		elif(token == '*'):
 			graph = stack.pop()
-			first, last = star_repetition(graph.initial, graph.last, True)
+			first, last = star_repetition(graph.initial, graph.last)
 			del graph.initial, graph.last, graph
 			stack.append(GraphStack(first, last))
 		elif(token == '+'):
@@ -330,6 +356,7 @@ def afn_epsilon(postfix):
 			copy_keys(second_graph.initial, first_graph.initial)
 			del second_graph.initial, second_graph.last
 			stack.append(GraphStack(first_graph.initial, first_graph.last))
+	bfs_iterative(stack[0].initial, 'change_indexes', None, None)
 	print_stack()
 	del stack[:]
 	global count
