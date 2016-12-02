@@ -33,6 +33,10 @@ class Node(object):
 		self.index = count
 		count += 1
 
+	def get_count(self):
+		global count
+		return count
+
 """ Class used to show logical errors and exit the program """
 class Errors(object):
 	"""Creates an object with all the posibles bugs"""
@@ -74,6 +78,9 @@ count = 0
 
 # Global errors object
 logical_errors = Errors()
+
+# Global list of nodes
+node_list = []
 
 # ---------------- Global variables  ----------------
 
@@ -244,9 +251,11 @@ def bfs_iterative(node, mode, goal_node, new_goal_node):
 		bfs_iterative(node, 'clear_visited', None, None)
 
 	elif(mode == 'change_indexes'):
+		global node_list
 		consecutive = 0
 		while(len(to_visit)):
 			node_to_visit = to_visit.popleft()
+			node_list.append(node_to_visit)
 			if (consecutive != node_to_visit.index):
 				node_to_visit.index = consecutive
 			consecutive += 1
@@ -256,6 +265,11 @@ def bfs_iterative(node, mode, goal_node, new_goal_node):
 					if(not next_node.visited and not next_node in to_visit):
 						to_visit.append(next_node)
 		bfs_iterative(node, 'clear_visited', None, None)
+		node_list = sorted(list(set(node_list)), key=get_index)
+
+
+def get_index(node):
+	return node.index
 
 def copy_node(node):
 	node_copied = Node()
@@ -358,6 +372,30 @@ def afn_epsilon(postfix):
 			stack.append(GraphStack(first_graph.initial, first_graph.last))
 	bfs_iterative(stack[0].initial, 'change_indexes', None, None)
 
+def print_power_set(nodes_list):
+	print("{", end="")
+	for subset in nodes_list:
+		print("{", end="")
+		for node in subset:
+			print(node.index, end=" ")
+		print("}", end=" ")
+	print("}")
+
+def get_power_set(nodes_list, index):
+	subset_list = []
+	if (index == len(nodes_list)):
+		subset_list.append([])
+	else:
+		subset_list = copy.copy(get_power_set(nodes_list, index + 1))
+		node = nodes_list[index]
+		more_set = []
+		for subset in subset_list:
+			new_set = copy.copy(subset)
+			new_set.append(node)
+			more_set.append(new_set)
+		for subset in more_set:
+			subset_list.append(subset)
+	return subset_list
 
 
 # ---------------- Functions ----------------

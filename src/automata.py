@@ -20,6 +20,8 @@ def main():
 	print("Module 1 (RPN): " + module1, end="\n\n")
 	print("Module 2 (AFN-e):")
 	module2 = m2(module1)
+	power_set = get_power_set(node_list, 0)
+	print_power_set(power_set)
 
 
 main()
