@@ -372,30 +372,53 @@ def afn_epsilon(postfix):
 			stack.append(GraphStack(first_graph.initial, first_graph.last))
 	bfs_iterative(stack[0].initial, 'change_indexes', None, None)
 
-def print_power_set(nodes_list):
-	print("{", end="")
-	for subset in nodes_list:
-		print("{", end="")
-		for node in subset:
-			print(node.index, end=" ")
-		print("}", end=" ")
-	print("}")
+def epsilon_closure(initial_node):
+	reachable_nodes = [initial_node]
+	to_visit = deque([initial_node])
+	while(len(to_visit)):
+		node = to_visit.popleft()
+		node.visited = True
+		if ('#' in node.transitions):
+			for node_to_visit in node.transitions['#']:
+				if (not node_to_visit.visited and not node_to_visit in to_visit):
+					to_visit.append(node_to_visit)
+					if(not node_to_visit in reachable_nodes):
+						reachable_nodes.append(node_to_visit)
+	bfs_iterative(initial_node, 'clear_visited', None, None)
+	return reachable_nodes
 
-def get_power_set(nodes_list, index):
-	subset_list = []
-	if (index == len(nodes_list)):
-		subset_list.append([])
-	else:
-		subset_list = copy.copy(get_power_set(nodes_list, index + 1))
-		node = nodes_list[index]
-		more_set = []
-		for subset in subset_list:
-			new_set = copy.copy(subset)
-			new_set.append(node)
-			more_set.append(new_set)
-		for subset in more_set:
-			subset_list.append(subset)
-	return subset_list
+def get_alphabet(initial_node):
+	alphabet = []
+	to_visit = deque([initial_node])
+	while(len(to_visit)):
+		node = to_visit.popleft()
+		node.visited = True
+		for key in node.transitions:
+			if (not key in alphabet and key != '#'):
+				alphabet.append(key)
+			for node_to_visit in node.transitions[key]:
+				if (not node_to_visit.visited and not node_to_visit in to_visit):
+					to_visit.append(node_to_visit)
+	bfs_iterative(initial_node, 'clear_visited', None, None)
+	return alphabet
 
+def m3():
+	first_column = []
+	alphabet = get_alphabet(node_list[0])
+	for node in node_list:
+		first_column.append(epsilon_closure(node))
+	second_column = {}
+	index = 0
+	for list_of_nodes in first_column:
+		second_column[index] = {}
+		for letter in alphabet:
+			for node in list_of_nodes:
+				if (letter in node.transitions):
+					if(letter in second_column[index]):
+						second_column[index][letter].append(node.transitions[letter])
+					else:
+						second_column[index][letter] = node.transitions[letter]
+		index += 1
+	print(second_column)					
 
 # ---------------- Functions ----------------
