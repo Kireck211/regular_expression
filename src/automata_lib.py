@@ -1,4 +1,4 @@
-from collections import deque
+from collections import *
 import copy
 
 # ---------------- Classes ----------------
@@ -251,11 +251,9 @@ def bfs_iterative(node, mode, goal_node, new_goal_node):
 		bfs_iterative(node, 'clear_visited', None, None)
 
 	elif(mode == 'change_indexes'):
-		global node_list
 		consecutive = 0
 		while(len(to_visit)):
 			node_to_visit = to_visit.popleft()
-			node_list.append(node_to_visit)
 			if (consecutive != node_to_visit.index):
 				node_to_visit.index = consecutive
 			consecutive += 1
@@ -265,8 +263,23 @@ def bfs_iterative(node, mode, goal_node, new_goal_node):
 					if(not next_node.visited and not next_node in to_visit):
 						to_visit.append(next_node)
 		bfs_iterative(node, 'clear_visited', None, None)
-		node_list = sorted(list(set(node_list)), key=get_index)
 
+	elif(mode == 'create_node_list'):
+		new_node_list = []
+		while(len(to_visit)):
+			node_to_visit = to_visit.popleft()
+			new_node_list.append(node_to_visit)
+			node_to_visit.visited = True
+			for key in node_to_visit.transitions:
+				for next_node in node_to_visit.transitions[key]:
+					if(not next_node.visited and not next_node in to_visit):
+						to_visit.append(next_node)
+		bfs_iterative(node, 'clear_visited', None, None)
+		return sorted(list(set(new_node_list)), key=get_index)
+
+def print_transitions(list_of_nodes):
+	for node in list_of_nodes:
+		print("index: {}, transitions: {}".format(node.index, node, node.transitions))
 
 def get_index(node):
 	return node.index
@@ -315,7 +328,7 @@ def concat_operation(left, right):
 def union_operation(initial, last, new_last):
 	if(len(last.transitions) and (not '#' in left.transitions) and len(left.transitions) != 1):
 		logical_errors.print_error(4)
-	bfs_iterative(initial, 'search_last_node', final, new_last)	
+	bfs_iterative(initial, 'search_last_node', final, new_last)
 
 """ Function that add new nodes witht the star repetition operation"""
 def star_repetition(initial, last):
@@ -371,6 +384,9 @@ def afn_epsilon(postfix):
 			del second_graph.initial, second_graph.last
 			stack.append(GraphStack(first_graph.initial, first_graph.last))
 	bfs_iterative(stack[0].initial, 'change_indexes', None, None)
+	global node_list
+	del node_list[:]
+	node_list = bfs_iterative(stack[0].initial, 'create_node_list', None, None)
 
 def epsilon_closure(initial_node):
 	reachable_nodes = [initial_node]
@@ -402,6 +418,16 @@ def get_alphabet(initial_node):
 	bfs_iterative(initial_node, 'clear_visited', None, None)
 	return alphabet
 
+def remove_copies(list_of_nodes):
+	new_list = []
+	for elements in list_of_nodes:
+		if (isinstance(elements, Iterable)):
+			for element in elements:
+				new_list.append(element)
+		else:
+			new_list.append(elements)
+	return list(set(new_list))
+
 def m3():
 	first_column = []
 	alphabet = get_alphabet(node_list[0])
@@ -415,10 +441,14 @@ def m3():
 			for node in list_of_nodes:
 				if (letter in node.transitions):
 					if(letter in second_column[index]):
-						second_column[index][letter].append(node.transitions[letter])
+						for n_node in node.transitions[letter]:
+							second_column[index][letter].append(n_node)
 					else:
-						second_column[index][letter] = node.transitions[letter]
+						second_column[index][letter] = copy.copy(node.transitions[letter])
 		index += 1
-	print(second_column)					
+	for index in second_column:
+		for key in second_column[index]:
+			second_column[index][key] = remove_copies(second_column[index][key])
+	print(second_column)
 
 # ---------------- Functions ----------------
