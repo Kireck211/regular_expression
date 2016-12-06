@@ -22,13 +22,14 @@ def m4():
 	for line in input_text_file:
 		text += line
 	text = convertInput(text)
-	print(text)
+	print("Text: {}".format(text))
+	print("Substrings founded:")
 	for character in text:
 		consume(character)
 
 def main():
 	input_file = codecs.open(file_name, encoding='utf-8')
-	regular_expression = input_file.readline()
+	regular_expression = convertInput(input_file.readline())
 	module1 = m1(regular_expression)
 	print("Module 1 (RPN): " + module1, end="\n\n")
 	print("Module 2 (AFN-e):")

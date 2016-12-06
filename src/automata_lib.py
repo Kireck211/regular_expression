@@ -125,6 +125,8 @@ def add_concats(regular_expression):
 	new_regular_expression = []
 	for i in range(0, len(regular_expression) - 1):
 		new_regular_expression.append(regular_expression[i])
+		if(regular_expression[i] == '\\' and return_priority(regular_expression[i]) < 0):
+			a = 1
 		if (regular_expression[i].isalpha()):
 			if(regular_expression[i+1].isalpha()):
 				new_regular_expression.append(CONST_CONCAT)
@@ -525,8 +527,8 @@ def consume(character):
 				if (not next_node in actual_nodes):
 					actual_nodes.append(next_node)
 			if(inFinalState()):
-				accepted_string += character
 				if(not printed):
+					accepted_string += character
 					print(accepted_string)
 					printed = True
 	if(not atLeastOne):
