@@ -2,7 +2,7 @@ from sys import argv
 from automata_lib import *
 import codecs
 
-script, file_name = argv
+script, file_name, input_text = argv
 
 def m1(regular_expression):
 	regular_expression = add_concats(regular_expression)
@@ -17,7 +17,14 @@ def m3():
 	afn()
 
 def m4():
-	
+	text = ""
+	input_text_file = codecs.open(input_text, encoding='utf-8')
+	for line in input_text_file:
+		text += line
+	text = convertInput(text)
+	print(text)
+	for character in text:
+		consume(character)
 
 def main():
 	input_file = codecs.open(file_name, encoding='utf-8')
@@ -28,5 +35,6 @@ def main():
 	module2 = m2(module1)
 	print("Module 3 (AFN):")
 	m3()
-
+	print("Module 4 (Find with implemented regex):")
+	m4()
 main()

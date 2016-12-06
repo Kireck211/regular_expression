@@ -87,6 +87,15 @@ logical_errors = Errors()
 # Global list of nodes
 node_list = []
 
+# Global afn
+complete_afn = []
+
+# Global list of actual nodes
+actual_nodes = []
+
+# Global accepted string
+accepted_string = ""
+
 # ---------------- Global variables  ----------------
 
 
@@ -488,5 +497,41 @@ def afn():
 						second_column[index][letter].append(epsilon_node)
 	afn = create_afn(second_column)
 	bfs_iterative(afn[0], 'print', None, None)
+	global complete_afn
+	global actual_nodes
+	complete_afn = afn[0]
+	actual_nodes.append(complete_afn)
+
+def convertInput(text):
+	text = "\\n".join(text.split("\r\n"))
+	text = text.replace(" ", "_")
+	return text
+
+def inFinalState():
+	for node in actual_nodes:
+		if(node.final):
+			return True
+	return False
+
+def consume(character):
+	global actual_nodes
+	global accepted_string
+	atLeastOne = False
+	printed = False
+	for node in actual_nodes:
+		if (character in node.transitions):
+			atLeastOne = True
+			for next_node in node.transitions[character]:
+				if (not next_node in actual_nodes):
+					actual_nodes.append(next_node)
+			if(inFinalState()):
+				accepted_string += character
+				if(not printed):
+					print(accepted_string)
+					printed = True
+	if(not atLeastOne):
+		del actual_nodes[:]
+		actual_nodes.append(complete_afn)
+		accepted_string = ""
 
 # ---------------- Functions ----------------
