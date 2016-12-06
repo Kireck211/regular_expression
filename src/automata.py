@@ -13,6 +13,12 @@ def m2(postfix):
 	print_stack()
 	return stack
 
+def m3():
+	afn()
+
+def m4():
+	
+
 def main():
 	input_file = codecs.open(file_name, encoding='utf-8')
 	regular_expression = input_file.readline()
@@ -20,6 +26,7 @@ def main():
 	print("Module 1 (RPN): " + module1, end="\n\n")
 	print("Module 2 (AFN-e):")
 	module2 = m2(module1)
+	print("Module 3 (AFN):")
 	m3()
 
 main()

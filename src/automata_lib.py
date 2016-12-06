@@ -67,8 +67,13 @@ class GraphStack(object):
 
 # ---------------- Global variables  ----------------
 
+CONST_CONCAT = ":"
+CONST_OR = ","
+CONST_PLUS = "+"
+CONST_STAR = "*"
+
 # Global priority operators indexes
-operator_priority = [["(", ")"],["*","+"], [".", ","]];
+operator_priority = [["(", ")"],[CONST_STAR,CONST_PLUS], [CONST_OR], [CONST_CONCAT]];
 
 # Global stack variable
 stack = []
@@ -113,24 +118,24 @@ def add_concats(regular_expression):
 		new_regular_expression.append(regular_expression[i])
 		if (regular_expression[i].isalpha()):
 			if(regular_expression[i+1].isalpha()):
-				new_regular_expression.append(".")
+				new_regular_expression.append(CONST_CONCAT)
 			elif(return_priority(regular_expression[i+1]) < 0):
-				new_regular_expression.append(".")
+				new_regular_expression.append(CONST_CONCAT)
 			elif(regular_expression[i+1] == '('):
-				new_regular_expression.append(".")
+				new_regular_expression.append(CONST_CONCAT)
 		elif (regular_expression[i] == ')'):
 			if (regular_expression[i+1] == '('):
-				new_regular_expression.append(".")
+				new_regular_expression.append(CONST_CONCAT)
 			elif(return_priority(regular_expression[i+1]) < 0):
-				new_regular_expression.append(".")
+				new_regular_expression.append(CONST_CONCAT)
 		elif (return_priority(regular_expression[i]) > 0 and return_priority(regular_expression[i]) < 2):
 			if (regular_expression[i+1].isalpha()):
-				new_regular_expression.append(".")
+				new_regular_expression.append(CONST_CONCAT)
 			if (regular_expression[i+1] == '('):
-				new_regular_expression.append(".")
+				new_regular_expression.append(CONST_CONCAT)
 		elif (return_priority(regular_expression[i]) < 0):
 			if(return_priority(regular_expression[i+1]) < 0):
-				new_regular_expression.append(".")
+				new_regular_expression.append(CONST_CONCAT)
 
 	new_regular_expression.append(regular_expression[len(regular_expression)-1])
 	return "".join(new_regular_expression)
@@ -167,7 +172,7 @@ def shunting_yard(regular_expression):
 		else:
 			#print("Entra con " + token.value)
 			#print("Valor de comparacion: " + (stack[len(stack)-1].value) if len(stack) else 'pila vacia')
-			while(len(stack) and stack[len(stack)-1].priority <= token.priority and stack[len(stack) - 1].value != '('): 
+			while(len(stack) and stack[len(stack)-1].priority >= token.priority and stack[len(stack) - 1].value != '('): 
 				#print("Top value of stack: " + stack[len(stack)-1].value +" and taken token: " + token.value)
 				deque_sy.append(stack.pop())
 			stack.append(token)
@@ -217,7 +222,12 @@ def bfs_iterative(node, mode, goal_node, new_goal_node):
 		while(len(to_visit)):
 			node_to_visit = to_visit.popleft()
 			node_to_visit.visited = True			
-			print("The node {} has the next transitions:".format(node_to_visit.index))
+			print("The node {} has the next transitions:".format(node_to_visit.index), end="")
+			if (node_to_visit.initial):
+				print(" (initial node)", end="")
+			if (node_to_visit.final):
+				print(" (final node)", end="")
+			print("")
 			for key in node_to_visit.transitions:
 				print("'{}': ".format(key), end="")
 				for next_node in node_to_visit.transitions[key]:
@@ -362,21 +372,21 @@ def afn_epsilon(postfix):
 			last = Node()
 			add_transition(first, last, token)
 			stack.append(GraphStack(first, last))
-		elif(token == '.'):
+		elif(token == CONST_CONCAT):
 			second_graph = stack.pop()
 			first_graph = stack.pop()
 			concat_operation(first_graph.last, second_graph.initial)
 			stack.append(GraphStack(first_graph.initial, second_graph.last))
-		elif(token == '*'):
+		elif(token == CONST_STAR):
 			graph = stack.pop()
 			first, last = star_repetition(graph.initial, graph.last)
 			del graph.initial, graph.last, graph
 			stack.append(GraphStack(first, last))
-		elif(token == '+'):
+		elif(token == CONST_PLUS):
 			graph = stack.pop()
 			first, last = positive_repetition(graph.initial, graph.last)
 			stack.append(GraphStack(first, last))
-		elif(token == ','):
+		elif(token == CONST_OR):
 			second_graph = stack.pop()
 			first_graph = stack.pop()
 			bfs_iterative(second_graph.initial, 'search_last_node', second_graph.last, first_graph.last)
@@ -387,6 +397,8 @@ def afn_epsilon(postfix):
 	global node_list
 	del node_list[:]
 	node_list = bfs_iterative(stack[0].initial, 'create_node_list', None, None)
+	node_list[stack[0].initial.index].initial = True
+	node_list[stack[0].last.index].final = True
 
 def epsilon_closure(initial_node):
 	reachable_nodes = [initial_node]
@@ -428,11 +440,32 @@ def remove_copies(list_of_nodes):
 			new_list.append(elements)
 	return list(set(new_list))
 
-def m3():
+def create_afn(second_column):
+	afn = []
+	for i in range(0, len(second_column)):
+		afn.append(Node())
+		if(i == 0):
+			afn[i].initial = True
+		if(node_list[i].final):
+			afn[i].final = True
+	for index in second_column:
+		for letter in second_column[index]:
+			for node in second_column[index][letter]:
+				add_transition(afn[index], afn[node.index], letter)
+	bfs_iterative(afn[0], 'change_indexes', None, None)
+	return afn
+
+def afn():
 	first_column = []
 	alphabet = get_alphabet(node_list[0])
 	for node in node_list:
 		first_column.append(epsilon_closure(node))
+	index = 0
+	for nodes in first_column:
+		for node in nodes:
+			if (len(node.transitions) == 0):
+				node_list[index].final = True
+		index += 1
 	second_column = {}
 	index = 0
 	for list_of_nodes in first_column:
@@ -447,8 +480,13 @@ def m3():
 						second_column[index][letter] = copy.copy(node.transitions[letter])
 		index += 1
 	for index in second_column:
-		for key in second_column[index]:
-			second_column[index][key] = remove_copies(second_column[index][key])
-	print(second_column)
+		for letter in second_column[index]:
+			for node in second_column[index][letter]:
+				epsilon_list = epsilon_closure(node)
+				for epsilon_node in epsilon_list:
+					if(not epsilon_node in second_column[index][letter]):
+						second_column[index][letter].append(epsilon_node)
+	afn = create_afn(second_column)
+	bfs_iterative(afn[0], 'print', None, None)
 
 # ---------------- Functions ----------------
